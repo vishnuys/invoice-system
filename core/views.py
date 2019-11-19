@@ -1,11 +1,14 @@
+import json
 from IPython import embed
+from .models import Invoice
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseBadRequest
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponse, HttpResponseBadRequest
 
 
 # Create your views here.
@@ -22,7 +25,11 @@ class LoginPage(TemplateView):
         user = authenticate(request, username=uname, password=pwd)
         if user is not None:
             login(request, user)
-            return redirect('/dashboard/')
+            if user.is_superuser:
+                return redirect('/admin/')
+            elif user.is_staff:
+                return redirect('/manager/')
+            return redirect('/cashier/')
         return render(request, "login.html", {'status': 'Invalid Username or Password'})
 
 
@@ -67,13 +74,30 @@ class LogoutPage(TemplateView):
         return redirect('/login/')
 
 
-class AdminPage(TemplateView):
+@method_decorator(csrf_exempt, name='dispatch')
+class ManagerPage(TemplateView):
 
     def get(self, request):
-        return render(request, 'admin.html')
+        return render(request, 'manager.html')
+
+    def post(self, request):
+        invoices_list = []
+        invoices = Invoice.objects.all()
+        for inv in invoices:
+            invoices_list.append({
+                'invoice_no': inv.invoice_no,
+                'item_code': inv.item_code,
+                'item_name': inv.item_name,
+                'quantity': inv.quantity,
+                'date': inv.date.strftime('%d-%m-%Y %H:%M'),
+                'unit_price': inv.unit_price,
+                'cashier_id': inv.cashier_id.id,
+                'country': inv.country,
+            })
+        return HttpResponse(json.dumps(invoices_list))
 
 
-class UserPage(TemplateView):
+class CashierPage(TemplateView):
 
     def get(self, request):
         return render(request, 'user.html')

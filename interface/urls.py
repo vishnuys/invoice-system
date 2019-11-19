@@ -24,8 +24,7 @@ urlpatterns = [
     path('login/', views.LoginPage.as_view()),
     path('signup/', views.SignUpPage.as_view()),
     path('', views.HomePage.as_view()),
-    path('dashboard/', views.DashboardPage.as_view()),
+    path('cashier/', views.CashierPage.as_view()),
     path('logout/', views.LogoutPage.as_view()),
-    path('dashboard/admin/', views.AdminPage.as_view()),
-    path('dashboard/user/', views.UserPage.as_view()),
+    path('manager/', views.ManagerPage.as_view()),
 ]
